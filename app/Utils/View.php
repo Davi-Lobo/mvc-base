@@ -5,6 +5,21 @@ namespace App\Utils;
 class View {
 
     /**
+     *
+     * @var array
+     */
+    private static $vars = [];
+
+    /**
+     *
+     * @param array $vars
+     * @return void
+     */
+    public static function init($vars = []) {
+        self::$vars = $vars;
+    }
+
+    /**
      * Return view content
      *
      * @param string $view
@@ -25,6 +40,8 @@ class View {
      */
     public static function render($view, $vars = []) {
         $viewContent = self::getViewContent($view);
+
+        $vars = array_merge(self::$vars, $vars);
 
         $keys = array_keys($vars);
         $keys = array_map(function($item) {

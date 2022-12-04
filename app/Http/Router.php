@@ -4,6 +4,7 @@ namespace App\Http;
 
 use \Closure;
 use \Exception;
+use \ReflectionFunction;
 
 class Router {
     
@@ -66,6 +67,16 @@ class Router {
             }
         }
 
+        // Route variables
+        $params['variables'] = [];
+
+        $patternVariable = '/{(.*?)}/';
+
+        if(preg_match_all($patternVariable, $route, $matches)) {
+            $route = preg_replace($patternVariable, '(.*?)', $route);
+            $params['variables'] = $matches[1];
+        }
+
         $patternRoute = '/^'.str_replace('/', '\/', $route).'$/';
 
         $this->routes[$patternRoute][$method] = $params;
@@ -79,6 +90,36 @@ class Router {
      */
     public function get($route, $params = []) {
         return $this->addRoute('GET', $route, $params);
+    }
+
+    /**
+     *
+     * @param string $route
+     * @param array $params
+     * @return void
+     */
+    public function post($route, $params = []) {
+        return $this->addRoute('POST', $route, $params);
+    }
+
+     /**
+     *
+     * @param string $route
+     * @param array $params
+     * @return void
+     */
+    public function put($route, $params = []) {
+        return $this->addRoute('PUT', $route, $params);
+    }
+
+    /**
+     *
+     * @param string $route
+     * @param array $params
+     * @return void
+     */
+    public function delete($route, $params = []) {
+        return $this->addRoute('DELETE', $route, $params);
     }
 
     /**
@@ -103,8 +144,14 @@ class Router {
         $httpMethod = $this->request->getHttpMethod();
 
         foreach($this->routes as $patternRoute => $methods) {
-            if(preg_match($patternRoute, $uri)) {
-                if($methods[$httpMethod]) {
+            if(preg_match($patternRoute, $uri, $matches)) {
+                if(isset($methods[$httpMethod])) {
+                    unset($matches[0]);
+
+                    $keys = $methods[$httpMethod]['variables'];
+                    $methods[$httpMethod]['variables'] = array_combine($keys, $matches);
+                    $methods[$httpMethod]['variables']['request'] = $this->request;
+
                     return $methods[$httpMethod];
                 }
 
@@ -122,10 +169,21 @@ class Router {
     public function run() {
         try {
             $route = $this->getRoute();
-            echo '<pre>';
-            print_r($route);
-            echo '</pre>';
-            exit;
+            
+            if(!isset($route['controller'])) {
+                throw new Exception("Error processing request", 500);
+            }
+
+            $args = [];
+
+            $reflection = new ReflectionFunction($route['controller']);
+            foreach($reflection->getParameters() as $parameter) {
+                $name = $parameter->getName();
+                $args[$name] = $route['variables'][$name] ?? '';
+            }
+      
+            return call_user_func_array($route['controller'], $args);
+
         } catch(Exception $e) {
             return new Response($e->getCode(), $e->getMessage());
         }
