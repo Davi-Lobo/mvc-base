@@ -14,11 +14,11 @@ class Organization {
      *
      * @var string
      */
-    public $name = 'Zleeb Commerce';
+    public $name = 'Organization Name';
 
     /**
      *
      * @var string
      */
-    public $description = 'A simple ecommerce platform';
+    public $description = 'Organization description';
 }
