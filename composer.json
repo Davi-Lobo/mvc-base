@@ -1,5 +1,5 @@
 {
-    "name": "commerce/zleeb",
+    "name": "mvc/base",
     "autoload": {
         "psr-4": {
             "App\\": "app/"
