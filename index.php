@@ -4,14 +4,15 @@ require __DIR__.'/vendor/autoload.php';
 
 use \App\Http\Router;
 use \App\Utils\View;
+use \App\Common\Environment;
 
-define('BASE_URL', 'http://localhost/');
+Environment::load(__DIR__);
 
 View::init([
-    'BASE_URL' => BASE_URL
+    'BASE_URL' => getenv('BASE_URL')
 ]);
 
-$obRouter = new Router(BASE_URL);
+$obRouter = new Router(getenv('BASE_URL'));
 
 include __DIR__.'/routes/pages.php';
 
